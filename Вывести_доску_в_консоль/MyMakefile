@@ -1,0 +1,9 @@
+CXX = g++
+CXXFLAGS = -Wall
+PROJ = test
+OBJS = main.o BoardToTerminal.o
+
+$(PROJ): $(OBJS)
+	$(CXX) $(OBJS) -o $(PROJ) -Wall
+clean:
+	rm $(PROJ) $(OBJS)
