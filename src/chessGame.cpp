@@ -1,62 +1,43 @@
 #include "chessGame.hpp"
+#include <cmath>
 
-
-void Piece::getPossibleSteps(std::list<std::shared_ptr<Piece>>::iterator* field, std::list<std::shared_ptr<Piece>> &pieces, int size, std::vector<int> &steps) {
-    for (int i = 0; i < size; ++i) {
-        for (int j = 0; j < size; ++j) { 
-            if (field[i * size + j] == pieces.end() || (*field[i * size + j])->getSide() != pieceSide) {
-                steps.push_back(i);
-                steps.push_back(j);
-            }
-        }
-    }
-}
 
 Board::Board(int size) {
     this->size = size;
-    field = new std::list<std::shared_ptr<Piece>>::iterator[size * size];
-    for (int i = 0; i < size * size; ++i) {
-        field[i] = pieces.end();
-    }
-}
-
-Board::~Board() {
-    delete[] field;
+    field.assign(size * size, pieces.end());
 }
 
 void Board::clear() {
+    field.assign(size * size, pieces.end());
     pieces.clear();
-    for (int i = 0; i < size * size; ++i) {
-        field[i] = pieces.end();
-    }
 }
 
-void Board::setPieces(std::shared_ptr<Piece> newPieces, int letterPos, int numberPos) {
-    if (!(0 <= letterPos && letterPos < size) || !(0 <= numberPos && numberPos < size)) {
+void Board::setPieces(std::shared_ptr<Piece> newPieces, CellPos pos) {
+    if (!pos.isInSquareBoard(size)) {
         return;
     }
 
     pieces.push_back(newPieces);
-    field[letterPos * size + numberPos] = --pieces.end();
+    field.at(pos.getArrayPos(size)) = --pieces.end();
 }
 
-void Board::move(int letterPos1, int numberPos1, int letterPos2, int numberPos2) {
-    if (field[letterPos1 * size + numberPos1] != pieces.end() && !(letterPos1 == letterPos2 && letterPos2 == numberPos2)) {
-        if (field[letterPos2 * size + numberPos2] != pieces.end()) {
-            pieces.erase(field[letterPos2 * size + numberPos2]);
+void Board::move(CellPos pos1, CellPos pos2) {
+    if (field.at(pos1.getArrayPos(size)) != pieces.end() && !(pos1 == pos2)) {
+        if (field.at(pos2.getArrayPos(size)) != pieces.end()) {
+            pieces.erase(field.at(pos2.getArrayPos(size)));
         }
-        field[letterPos2 * size + numberPos2] = field[letterPos1 * size + numberPos1];
-        field[letterPos1 * size + numberPos1] = pieces.end();
-    } 
+        field.at(pos2.getArrayPos(size)) = field.at(pos1.getArrayPos(size));
+        field.at(pos1.getArrayPos(size)) = pieces.end();
+    }
 }
 
-void Board::getPossibleSteps(int letterPos, int numberPos, std::vector<int> &steps) {
-    (*field[letterPos * size + numberPos])->getPossibleSteps(field, pieces, size, steps);
+void Board::getPossibleSteps(CellPos pos, std::vector<CellPos> &steps) {
+    (*field.at(pos.getArrayPos(size)))->getPossibleSteps(field, pieces, steps);
 }
 
-Color Board::getPieceSide(int letterPos, int numberPos) {
-    if (field[letterPos * size + numberPos] != pieces.end()) {
-        return (*field[letterPos * size + numberPos])->getSide();
+Color Board::getPieceSide(CellPos pos) {
+    if (field.at(pos.getArrayPos(size)) != pieces.end()) {
+        return (*field.at(pos.getArrayPos(size)))->getSide();
     }
 
     return NO_COLOR;
@@ -65,11 +46,10 @@ Color Board::getPieceSide(int letterPos, int numberPos) {
 std::vector<int> Board::getBoard() {
     std::vector<int> fullBoard;
     for (int i = 0; i < size * size; ++i) {
-        if (field[i] == pieces.end()) {
+        if (field.at(i) == pieces.end()) {
             fullBoard.push_back(0);
         } else {
-            std::shared_ptr<Piece> piecesParams = *field[i];
-            fullBoard.push_back(piecesParams->getKind() * piecesParams->getSide());
+            fullBoard.push_back((*field.at(i))->getKind() * (*field.at(i))->getSide());
         }
     }
     return fullBoard;
@@ -81,70 +61,67 @@ bool classicStartPosition(Board& board) {
     }
 
     board.clear();
-    for (int i = 0; i < 8; ++i) {
-        board.setPieces(std::make_shared<Pawn>(WHITE), i, 1);
-        board.setPieces(std::make_shared<Pawn>(BLACK), i, 6);
+    for (int i = 1; i <= 8; ++i) {
+        board.setPieces(std::make_shared<Pawn>(WHITE), CellPos(i, 2));
+        board.setPieces(std::make_shared<Pawn>(BLACK), CellPos(i, 7));
     }
     for (int i = 0; i < 2; ++i) {
-        board.setPieces(std::make_shared<Rook>(WHITE), i * 7, 0);
-        board.setPieces(std::make_shared<Rook>(BLACK), i * 7, 7);
-        board.setPieces(std::make_shared<Knight>(WHITE), 1 + i * 5, 0);
-        board.setPieces(std::make_shared<Knight>(BLACK), 1 + i * 5, 7);
-        board.setPieces(std::make_shared<Bishop>(WHITE), 2 + i * 3, 0);
-        board.setPieces(std::make_shared<Bishop>(BLACK), 2 + i * 3, 7);
+        board.setPieces(std::make_shared<Rook>(WHITE), CellPos(1 + i * 7, 1));
+        board.setPieces(std::make_shared<Rook>(BLACK), CellPos(1 + i * 7, 8));
+        board.setPieces(std::make_shared<Knight>(WHITE), CellPos(2 + i * 5, 1));
+        board.setPieces(std::make_shared<Knight>(BLACK), CellPos(2 + i * 5, 8));
+        board.setPieces(std::make_shared<Bishop>(WHITE), CellPos(3 + i * 3, 1));
+        board.setPieces(std::make_shared<Bishop>(BLACK), CellPos(3 + i * 3, 8));
     }
-    board.setPieces(std::make_shared<Queen>(WHITE), 3, 0);
-    board.setPieces(std::make_shared<Queen>(BLACK), 3, 7);
-    board.setPieces(std::make_shared<King>(WHITE), 4, 0);
-    board.setPieces(std::make_shared<King>(BLACK), 4, 7);
+    board.setPieces(std::make_shared<Queen>(WHITE), CellPos(4, 1));
+    board.setPieces(std::make_shared<Queen>(BLACK), CellPos(4, 8));
+    board.setPieces(std::make_shared<King>(WHITE), CellPos(5, 1));
+    board.setPieces(std::make_shared<King>(BLACK), CellPos(5, 8));
 
     return true;
 } 
 
 ChessGame::ChessGame(): board(8) {
     classicStartPosition(board);
-    letterPosNow = -1;
-    numberPosNow = -1;
+    currentPos = CellPos();
     playerTurn = WHITE;
 }
 
 void ChessGame::clearChoosenPiece() {
-    letterPosNow = -1;
-    numberPosNow = -1;
+    currentPos.setPosition(0, 0);
     possibleSteps.clear();
 }
 
-void ChessGame::makeStep(std::string pos) {
-    int letterPos = int(pos[0] - 'a'), numberPos = int(pos[1] - '1');
+void ChessGame::makeStep(std::string str) {
+    CellPos pos = CellPos(str);
 
-    if (!isPieceChosen() || !(0 <= letterPos && letterPos < board.getSize()) || !(0 <= numberPos && numberPos < board.getSize())) {
+    if (!isPieceChosen() || !pos.isInSquareBoard(board.getSize())) {
         return;
     }
 
-    board.move(letterPosNow, numberPosNow, letterPos, numberPos);
+    board.move(currentPos, pos);
 
     clearChoosenPiece();
     playerTurn = (playerTurn == WHITE) ? BLACK : ((playerTurn == BLACK) ? WHITE : NO_COLOR);
 }
 
 bool ChessGame::isPieceChosen() {
-    return (letterPosNow != -1 && numberPosNow != -1);
+    return currentPos.isRealPos();
 }
 
-bool ChessGame::choosePiece(std::string pos) {
-    int letterPos = int(pos[0] - 'a'), numberPos = int(pos[1] - '1');
+bool ChessGame::choosePiece(std::string str) {
+    CellPos pos = CellPos(str);
 
-    if (!(0 <= letterPos && letterPos < board.getSize()) || !(0 <= numberPos && numberPos < board.getSize())) {
+    if (!pos.isInSquareBoard(board.getSize())) {
         clearChoosenPiece(); 
         return false;
     }
 
-    if(board.getPieceSide(letterPos, numberPos) == playerTurn) {
-        if (letterPos != letterPosNow && numberPos != numberPosNow) {
+    if(board.getPieceSide(pos) == playerTurn) {
+        if (currentPos != pos) {
             clearChoosenPiece(); 
-            board.getPossibleSteps(letterPos, numberPos, possibleSteps);
-            letterPosNow = letterPos;
-            numberPosNow = numberPos;
+            board.getPossibleSteps(pos, possibleSteps);
+            currentPos = pos;
         }
         return true;
     }
@@ -153,10 +130,10 @@ bool ChessGame::choosePiece(std::string pos) {
 }
 
 void ChessGame::showPossibleSteps() {
-    std::cout << "PossibleSteps " << possibleSteps.size() / 2 << std::endl;
+    std::cout << "PossibleSteps " << possibleSteps.size() << std::endl;
 
-    for (long unsigned int i = 0; i < possibleSteps.size(); i += 2) {
-        std::cout << char('a' + possibleSteps.at(i)) << 1 + possibleSteps.at(i + 1) << " ";
+    for (auto it = possibleSteps.begin(); it != possibleSteps.end(); ++it) {
+        std::cout << char('a' + it->getLetter() - 1) << it->getNumber() << " ";
     }
     std::cout << std::endl;
 }

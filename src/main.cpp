@@ -1,6 +1,6 @@
-#include "chessGame.hpp"
 #include <string>
 #include <map>
+#include "chessGame.hpp"
 
 
 int main() {

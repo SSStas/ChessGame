@@ -6,101 +6,17 @@
 #include <list>
 #include <memory>
 #include <string>
+#include "pieces.hpp"
+#include "cellPos.hpp"
 
-
-enum Color { NO_COLOR = 0, WHITE = 1, BLACK = -1 };
-enum PieceKind { NONE = 0, KING = 1, QUEEN, BISHOP, KNIGHT, ROOK, PAWN };
-
-class Piece {
-    protected:
-        Color pieceSide;
-
-    public:
-        Piece(Color color) {
-            pieceSide = color;
-        }
-
-        virtual PieceKind getKind() = 0;
-        Color getSide() { return this->pieceSide; }
-
-        void getPossibleSteps(std::list<std::shared_ptr<Piece>>::iterator* field, std::list<std::shared_ptr<Piece>> &pieces, int size, std::vector<int> &steps);
-};
-
-class King: public Piece {
-    PieceKind kind;
-
-    public:
-        King(Color color) : Piece(color) {
-            this->kind = KING;
-        }
-
-        PieceKind getKind() { return this->kind; }
-};
-
-class Queen: public Piece {
-    PieceKind kind;
-
-    public:
-        Queen(Color color) : Piece(color) {
-            this->kind = QUEEN;
-        }
-
-        PieceKind getKind() { return this->kind; }
-};
-
-class Bishop: public Piece {
-    PieceKind kind;
-
-    public:
-        Bishop(Color color) : Piece(color) {
-            this->kind = BISHOP;
-        }
-
-        PieceKind getKind() { return this->kind; }
-};
-
-class Knight: public Piece {
-    PieceKind kind;
-
-    public:
-        Knight(Color color) : Piece(color) {
-            this->kind = KNIGHT;
-        }
-
-        PieceKind getKind() { return this->kind; }
-};
-
-class Rook: public Piece {
-    PieceKind kind;
-
-    public:
-        Rook(Color color) : Piece(color) {
-            this->kind = ROOK;
-        }
-
-        PieceKind getKind() { return this->kind; }
-};
-
-class Pawn: public Piece {
-    PieceKind kind;
-
-    public:
-        Pawn(Color color) : Piece(color) {
-            this->kind = PAWN;
-        }
-
-        PieceKind getKind() { return this->kind; }
-};
 
 class Board {
     int size = 8;
-    std::list<std::shared_ptr<Piece>> pieces;
-    std::list<std::shared_ptr<Piece>>::iterator* field;
+    piecesList pieces;
+    std::vector<piecesList::iterator> field;
 
     public:
         Board(int size);
-
-        ~Board();
 
         int getSize() {
             return size;
@@ -108,13 +24,13 @@ class Board {
 
         void clear();
 
-        void setPieces(std::shared_ptr<Piece> newPieces, int letterPos, int numberPos);
+        void setPieces(std::shared_ptr<Piece> newPieces, CellPos pos);
 
-        void move(int letterPos1, int numberPos1, int letterPos2, int numberPos2);
+        void move(CellPos pos1, CellPos pos2);
 
-        void getPossibleSteps(int letterPos, int numberPos, std::vector<int> &steps);
+        void getPossibleSteps(CellPos pos, std::vector<CellPos> &steps);
 
-        Color getPieceSide(int letterPos, int numberPos);
+        Color getPieceSide(CellPos pos);
 
         std::vector<int> getBoard();
 };
@@ -124,24 +40,22 @@ bool classicStartPosition(Board& board);
 class ChessGame {
     Board board;
 
-    int letterPosNow;
-    int numberPosNow;
+    CellPos currentPos;
     Color playerTurn;
-    std::vector<int> possibleSteps; 
+    std::vector<CellPos> possibleSteps; 
 
     public:
         ChessGame();
 
         void clearChoosenPiece();
 
-        void makeStep(std::string pos);
+        void makeStep(std::string str);
 
         bool isPieceChosen();
 
-        bool choosePiece(std::string pos);
+        bool choosePiece(std::string str);
 
         void showPossibleSteps();
 
         void show();
 };
- 
