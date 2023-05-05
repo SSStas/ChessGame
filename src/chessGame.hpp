@@ -24,11 +24,11 @@ class Board {
 
         void clear();
 
-        void setPieces(std::shared_ptr<Piece> newPieces, CellPos pos);
+        void setPiece(std::shared_ptr<Piece> newPiece);
 
-        void move(CellPos pos1, CellPos pos2);
+        bool move(CellPos pos1, CellPos pos2);
 
-        void getPossibleSteps(CellPos pos, std::vector<CellPos> &steps);
+        void getPossibleSteps(CellPos pos, std::list<CellPos> &steps);
 
         Color getPieceSide(CellPos pos);
 
@@ -42,14 +42,14 @@ class ChessGame {
 
     CellPos currentPos;
     Color playerTurn;
-    std::vector<CellPos> possibleSteps; 
+    std::list<CellPos> possibleSteps; 
 
     public:
         ChessGame();
 
         void clearChoosenPiece();
 
-        void makeStep(std::string str);
+        bool makeStep(std::string str);
 
         bool isPieceChosen();
 

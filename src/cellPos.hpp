@@ -13,7 +13,7 @@ class CellPos {
 
     public:
         CellPos(): letterPos(0), numberPos(0) {}
-        CellPos(int letterPos, int numberPos): letterPos(letterPos), numberPos(numberPos) {}
+        CellPos(int letterPos, int numberPos);
         CellPos(const std::string pos);
 
         bool isRealPos();
@@ -21,10 +21,10 @@ class CellPos {
         bool isInSquareBoard(unsigned short size = 8);
         int getArrayPos(unsigned short size = 8);
 
-        unsigned short &getLetter() { return letterPos; }
-        unsigned short &getNumber() { return numberPos; }
+        unsigned short getLetter() { return letterPos; }
+        unsigned short getNumber() { return numberPos; }
 
-        void setPosition(unsigned short letterPos, unsigned short numberPos);
+        void setPosition(int letterPos, int numberPos);
         bool movePosition(int letterMove, int numberMove, unsigned short size = 8);
 
         CellPos& operator=(const CellPos &other);

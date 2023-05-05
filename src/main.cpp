@@ -14,8 +14,7 @@ int main() {
         if (cmd == "exit") {
             isGameContinue = false;
         } else {
-            if (!game.choosePiece(cmd) && game.isPieceChosen()) {
-                game.makeStep(cmd);
+            if (!game.choosePiece(cmd) && game.isPieceChosen() && game.makeStep(cmd)) {
                 game.show();
             } else {
                 game.showPossibleSteps();

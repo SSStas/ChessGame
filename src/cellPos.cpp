@@ -1,6 +1,16 @@
 #include "cellPos.hpp"
 
 
+CellPos::CellPos(int letterPos, int numberPos) {
+    if (letterPos <= 0 || numberPos <= 0) {
+        this->letterPos = 0;
+        this->numberPos = 0;
+    } else {
+        this->letterPos = letterPos;
+        this->numberPos = numberPos;
+    }
+}
+
 CellPos::CellPos(const std::string pos) {
     auto numIt = pos.begin();
 
@@ -62,9 +72,14 @@ int CellPos::getArrayPos(unsigned short size) {
     return (letterPos - 1) * size + (numberPos - 1);
 }
 
-void CellPos::setPosition(unsigned short letterPos, unsigned short numberPos) {
-    this->letterPos = letterPos;
-    this->numberPos = numberPos;
+void CellPos::setPosition(int letterPos, int numberPos) {
+    if (letterPos <= 0 || numberPos <= 0) {
+        this->letterPos = 0;
+        this->numberPos = 0;
+    } else {
+        this->letterPos = letterPos;
+        this->numberPos = numberPos;
+    }
 }
 
 bool CellPos::movePosition(int letterMove, int numberMove, unsigned short size) {

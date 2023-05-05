@@ -12,26 +12,32 @@ void Board::clear() {
     pieces.clear();
 }
 
-void Board::setPieces(std::shared_ptr<Piece> newPieces, CellPos pos) {
+void Board::setPiece(std::shared_ptr<Piece> newPiece) {
+    CellPos pos = newPiece->getPos();
+
     if (!pos.isInSquareBoard(size)) {
         return;
     }
 
-    pieces.push_back(newPieces);
+    pieces.push_back(newPiece);
     field.at(pos.getArrayPos(size)) = --pieces.end();
 }
 
-void Board::move(CellPos pos1, CellPos pos2) {
-    if (field.at(pos1.getArrayPos(size)) != pieces.end() && !(pos1 == pos2)) {
-        if (field.at(pos2.getArrayPos(size)) != pieces.end()) {
-            pieces.erase(field.at(pos2.getArrayPos(size)));
-        }
-        field.at(pos2.getArrayPos(size)) = field.at(pos1.getArrayPos(size));
-        field.at(pos1.getArrayPos(size)) = pieces.end();
+bool Board::move(CellPos pos1, CellPos pos2) {
+    if (!pos1.isInSquareBoard(size) || !pos2.isInSquareBoard(size)) {
+        return false;
     }
+
+    piecesList::iterator pieceIt = field.at(pos1.getArrayPos(size));
+    if (pieceIt != pieces.end() && pos1 != pos2 && (*pieceIt)->isPossibleStep(field, pieces, pos2)) {
+        (*pieceIt)->move(field, pieces, pos2);
+        return true;
+    }
+
+    return false;
 }
 
-void Board::getPossibleSteps(CellPos pos, std::vector<CellPos> &steps) {
+void Board::getPossibleSteps(CellPos pos, std::list<CellPos> &steps) {
     (*field.at(pos.getArrayPos(size)))->getPossibleSteps(field, pieces, steps);
 }
 
@@ -62,21 +68,21 @@ bool classicStartPosition(Board& board) {
 
     board.clear();
     for (int i = 1; i <= 8; ++i) {
-        board.setPieces(std::make_shared<Pawn>(WHITE), CellPos(i, 2));
-        board.setPieces(std::make_shared<Pawn>(BLACK), CellPos(i, 7));
+        board.setPiece(std::make_shared<Pawn>(CellPos(i, 2), WHITE, true));
+        board.setPiece(std::make_shared<Pawn>(CellPos(i, 7), BLACK, true));
     }
     for (int i = 0; i < 2; ++i) {
-        board.setPieces(std::make_shared<Rook>(WHITE), CellPos(1 + i * 7, 1));
-        board.setPieces(std::make_shared<Rook>(BLACK), CellPos(1 + i * 7, 8));
-        board.setPieces(std::make_shared<Knight>(WHITE), CellPos(2 + i * 5, 1));
-        board.setPieces(std::make_shared<Knight>(BLACK), CellPos(2 + i * 5, 8));
-        board.setPieces(std::make_shared<Bishop>(WHITE), CellPos(3 + i * 3, 1));
-        board.setPieces(std::make_shared<Bishop>(BLACK), CellPos(3 + i * 3, 8));
+        board.setPiece(std::make_shared<Rook>(CellPos(1 + i * 7, 1), WHITE));
+        board.setPiece(std::make_shared<Rook>(CellPos(1 + i * 7, 8), BLACK));
+        board.setPiece(std::make_shared<Knight>(CellPos(2 + i * 5, 1), WHITE));
+        board.setPiece(std::make_shared<Knight>(CellPos(2 + i * 5, 8), BLACK));
+        board.setPiece(std::make_shared<Bishop>(CellPos(3 + i * 3, 1), WHITE));
+        board.setPiece(std::make_shared<Bishop>(CellPos(3 + i * 3, 8), BLACK));
     }
-    board.setPieces(std::make_shared<Queen>(WHITE), CellPos(4, 1));
-    board.setPieces(std::make_shared<Queen>(BLACK), CellPos(4, 8));
-    board.setPieces(std::make_shared<King>(WHITE), CellPos(5, 1));
-    board.setPieces(std::make_shared<King>(BLACK), CellPos(5, 8));
+    board.setPiece(std::make_shared<Queen>(CellPos(4, 1), WHITE));
+    board.setPiece(std::make_shared<Queen>(CellPos(4, 8), BLACK));
+    board.setPiece(std::make_shared<King>(CellPos(5, 1), WHITE));
+    board.setPiece(std::make_shared<King>(CellPos(5, 8), BLACK));
 
     return true;
 } 
@@ -92,17 +98,17 @@ void ChessGame::clearChoosenPiece() {
     possibleSteps.clear();
 }
 
-void ChessGame::makeStep(std::string str) {
+bool ChessGame::makeStep(std::string str) {
     CellPos pos = CellPos(str);
 
-    if (!isPieceChosen() || !pos.isInSquareBoard(board.getSize())) {
-        return;
+    if (!board.move(currentPos, pos)) {
+        clearChoosenPiece();
+        return false;
     }
-
-    board.move(currentPos, pos);
 
     clearChoosenPiece();
     playerTurn = (playerTurn == WHITE) ? BLACK : ((playerTurn == BLACK) ? WHITE : NO_COLOR);
+    return true;
 }
 
 bool ChessGame::isPieceChosen() {
