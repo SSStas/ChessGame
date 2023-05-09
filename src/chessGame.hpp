@@ -6,43 +6,18 @@
 #include <list>
 #include <memory>
 #include <string>
-#include "pieces.hpp"
 #include "cellPos.hpp"
+#include "chess.hpp"
 
-
-class Board {
-    int size = 8;
-    piecesList pieces;
-    std::vector<piecesList::iterator> field;
-
-    public:
-        Board(int size);
-
-        int getSize() {
-            return size;
-        }
-
-        void clear();
-
-        void setPiece(std::shared_ptr<Piece> newPiece);
-
-        bool move(CellPos pos1, CellPos pos2);
-
-        void getPossibleSteps(CellPos pos, std::list<CellPos> &steps);
-
-        Color getPieceSide(CellPos pos);
-
-        std::vector<int> getBoard();
-};
-
-bool classicStartPosition(Board& board);
 
 class ChessGame {
-    Board board;
+    Chess chess;
 
     CellPos currentPos;
     Color playerTurn;
     std::list<CellPos> possibleSteps; 
+
+    bool isPossibleStep(CellPos pos);
 
     public:
         ChessGame();
@@ -55,7 +30,10 @@ class ChessGame {
 
         bool choosePiece(std::string str);
 
-        void showPossibleSteps();
+        LogStatus changeRecordingStatus();
+        void nextMove();
+        void previousMove();
 
+        void showPossibleSteps();
         void show();
 };
