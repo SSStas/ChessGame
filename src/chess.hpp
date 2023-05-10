@@ -36,6 +36,8 @@ class Chess {
 
         bool move(CellPos pos1, CellPos pos2);
 
+        void changePiece(PieceKind kind);
+
         bool isRecordingOn();
         void setRecordingStatus(LogStatus recordingStatus);
         bool nextMove();

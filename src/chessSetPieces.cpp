@@ -17,6 +17,17 @@ void Piece::move(Board &board, MoveLog &moveLog, RulesController &rules, CellPos
     moveLog.addNewMoveRecord(board.getPiecePtr(position), rules.isPriorityPiece(board.getPiecePtr(position)) ? ADDING_PRIORITY : ADDITION);
 }
 
+void Piece::replace(Board &board, MoveLog &moveLog, RulesController &rules, PieceKind kind) {
+    if (!board.isCellEmpty(position)) {
+        moveLog.addNewMoveRecord(board.getPiecePtr(position), rules.isPriorityPiece(board.getPiecePtr(position)) ? REMOVAL_PRIORITY : REMOVAL);
+        board.putInDeleteList(position);
+    }
+
+    std::shared_ptr<Piece> newPiece = rules.getPieceToChoose(kind);
+    board.setPiece(newPiece);
+    moveLog.addNewMoveRecord(newPiece, rules.isPriorityPiece(newPiece) ? ADDING_PRIORITY : ADDITION);
+}
+
 void Piece::getPossibleSteps(Board &board, MoveLog &moveLog, std::list<CellPos> &steps) {
     for (int i = 0; i < board.size; ++i) {
         for (int j = 0; j < board.size; ++j) { 
@@ -302,6 +313,16 @@ void Pawn::move(Board &board, MoveLog &moveLog, RulesController &rules, CellPos 
         moveLog.addNewMoveRecord(board.getPiecePtr(position), rules.isPriorityPiece(board.getPiecePtr(position)) ? ADDING_PRIORITY : ADDITION);
     } else {
         Piece::move(board, moveLog, rules, newPos);
+    }
+
+    possiblePos.setPosition(position.getLetter(), position.getNumber() + dir);
+    if (!possiblePos.isInSquareBoard(board.size)) {
+        rules.addReplacementPiece(board.getPiecePtr(position));
+
+        rules.addPieceToChoose(std::make_shared<Queen>(position, pieceSide));
+        rules.addPieceToChoose(std::make_shared<Rook>(position, pieceSide));
+        rules.addPieceToChoose(std::make_shared<Queen>(position, pieceSide));
+        rules.addPieceToChoose(std::make_shared<Knight>(position, pieceSide));
     }
 }
 

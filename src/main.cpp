@@ -14,6 +14,7 @@ int main() {
     mapping["previous"] = 2;
     mapping["show"] = 3;
     mapping["changeRecording"] = 4;
+    mapping["choosePiece"] = 5;
 
     while (isGameContinue) {
         std::cin >> cmd;
@@ -46,6 +47,11 @@ int main() {
             break;
         case 4:
             std::cout << ((game.changeRecordingStatus() == RECORDING_ON) ? "recordingOn" : "recordingOff") << std::endl;
+            break;
+        case 5:
+            int kindNum;
+            std::cin >> kindNum;
+            game.chooseReplacementPiece(kindNum);
             break;
         default:
             std::cout << "Unknown command" << std::endl; 

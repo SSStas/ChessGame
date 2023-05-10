@@ -100,7 +100,7 @@ bool MoveLog::goPreviousRecord(Board &board, RulesController &rulesController) {
     }
     ++lastState;
 
-    //rulesController.changePlayerTurn();
+    rulesController.changePlayerTurn();
 
     return true;
 }

@@ -29,6 +29,8 @@ class ChessGame {
 
         bool choosePiece(std::string str);
 
+        void chooseReplacementPiece(int kindNum);
+
         LogStatus changeRecordingStatus();
         void nextMove();
         void previousMove();

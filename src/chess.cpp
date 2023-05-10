@@ -24,14 +24,14 @@ bool Chess::classicStartPosition(RulesController &rulesController) {
 
     for (int i = 1; i <= 8; ++i) {
         board.setPiece(std::make_shared<Pawn>(CellPos(i, 2), WHITE, true));
-        board.setPiece(std::make_shared<Pawn>(CellPos(i, 7), BLACK, true));
+        //board.setPiece(std::make_shared<Pawn>(CellPos(i, 7), BLACK, true));
     }
 
     for (int i = 0; i < 2; ++i) {
         board.setPiece(std::make_shared<Rook>(CellPos(1 + i * 7, 1), WHITE));
         board.setPiece(std::make_shared<Rook>(CellPos(1 + i * 7, 8), BLACK));
         board.setPiece(std::make_shared<Knight>(CellPos(2 + i * 5, 1), WHITE));
-        board.setPiece(std::make_shared<Knight>(CellPos(2 + i * 5, 8), BLACK));
+        //board.setPiece(std::make_shared<Knight>(CellPos(2 + i * 5, 8), BLACK));
         board.setPiece(std::make_shared<Bishop>(CellPos(3 + i * 3, 1), WHITE));
         board.setPiece(std::make_shared<Bishop>(CellPos(3 + i * 3, 8), BLACK));
     }
@@ -56,14 +56,24 @@ bool Chess::move(CellPos pos1, CellPos pos2) {
         board.getPiecePtr(pos1)->move(board, moveLog, rulesController, pos2);
         board.deletePiecesFromList();
 
-        rulesController.changePlayerTurn();
-
-        rulesController.mateAndStalemateProcessing(board, moveLog);
+        if (rulesController.getGameStatus() != CHANGE_PIECE) {
+            rulesController.changePlayerTurn();
+            rulesController.mateAndStalemateProcessing(board, moveLog);
+        }
 
         return true;
     }
 
     return false;
+}
+
+void Chess::changePiece(PieceKind kind) {
+    if (rulesController.getGameStatus() == CHANGE_PIECE) {
+        rulesController.getReplacementPiece()->replace(board, moveLog, rulesController, kind);
+        rulesController.clearPiecesToChoose();
+        rulesController.changePlayerTurn();
+        rulesController.mateAndStalemateProcessing(board, moveLog);
+    }
 }
 
 bool Chess::isRecordingOn() {

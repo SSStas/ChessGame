@@ -110,7 +110,8 @@ class RulesController {
     GameStatus gameStatus;
     Color playerTurn;
 
-    std::vector<std::shared_ptr<Piece>> piecesToChoose;
+    std::shared_ptr<Piece> replacementPiece;
+    std::list<std::shared_ptr<Piece>> piecesToChoose;
 
     std::shared_ptr<Piece> mainWhite;
     std::shared_ptr<Piece> mainBlack;
@@ -119,6 +120,7 @@ class RulesController {
         RulesController(): gameStatus(IN_GAME), playerTurn(WHITE) {
             mainWhite = nullptr;
             mainBlack = nullptr;
+            replacementPiece = nullptr;
         }  
 
         GameStatus getGameStatus();
@@ -131,9 +133,11 @@ class RulesController {
         void excludeChecksFromPossibleSteps(CellPos pos, std::list<CellPos> &steps, Board &board, MoveLog &moveLog);
         void mateAndStalemateProcessing(Board &board, MoveLog &moveLog);
         
-        void addPieceToChoose(std::shared_ptr<Piece> &piecePtr);
+        void addReplacementPiece(std::shared_ptr<Piece> &piecePtr);
+        void addPieceToChoose(std::shared_ptr<Piece> piecePtr);
         void showPiecesToChoose(std::list<int> &piecesToChoose);
-        std::shared_ptr<Piece> getPieceToChoose(int index);
+        std::shared_ptr<Piece> getPieceToChoose(PieceKind kind);
+        std::shared_ptr<Piece> getReplacementPiece();
         void clearPiecesToChoose();
 
         void changePlayerTurn() { playerTurn = (playerTurn == WHITE) ? BLACK : ((playerTurn == BLACK) ? WHITE : NO_COLOR); }
@@ -166,6 +170,7 @@ class Piece {
         void setPos(CellPos position) { this->position = position; }
 
         virtual void move(Board &board, MoveLog &moveLog, RulesController &rules, CellPos newPos);
+        virtual void replace(Board &board, MoveLog &moveLog, RulesController &rules, PieceKind kind);
         virtual void getPossibleSteps(Board &board, MoveLog &moveLog, std::list<CellPos> &steps);
         virtual bool isPossibleStep(Board &board, MoveLog &moveLog, CellPos otherPos);
 

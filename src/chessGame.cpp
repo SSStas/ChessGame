@@ -22,14 +22,13 @@ void ChessGame::clearChoosenPiece() {
 bool ChessGame::makeStep(std::string str) {
     CellPos pos = CellPos(str);
 
-    if (!chess.move(currentPos, pos)) {
+    if (isPossibleStep(pos) && chess.move(currentPos, pos)) {
         clearChoosenPiece();
-        return false;
+        return true;
     }
 
     clearChoosenPiece();
-    
-    return true;
+    return false;
 }
 
 bool ChessGame::isPieceChosen() {
@@ -63,6 +62,27 @@ void ChessGame::showPossibleSteps() {
         std::cout << char('a' + it->getLetter() - 1) << it->getNumber() << " ";
     }
     std::cout << std::endl;
+}
+
+void ChessGame::chooseReplacementPiece(int kindNum) {
+    PieceKind kind = NONE;
+
+    switch (kindNum) {
+    case 2:
+        kind = QUEEN;
+        break;
+    case 3:
+        kind = BISHOP;
+        break;
+    case 4:
+        kind = ROOK;
+        break;
+    default:
+        kind = KNIGHT;
+        break;
+    }
+    
+    chess.changePiece(kind);
 }
 
 LogStatus ChessGame::changeRecordingStatus() {

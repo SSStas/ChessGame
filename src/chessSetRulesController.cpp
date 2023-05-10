@@ -59,6 +59,8 @@ void RulesController::excludeChecksFromPossibleSteps(CellPos pos, std::list<Cell
 
         newMoveLog.goPreviousRecord(board, *this);
     }
+
+    playerTurn = mainPieceSide;
 }
 
 void RulesController::mateAndStalemateProcessing(Board &board, MoveLog &moveLog) {
@@ -85,9 +87,11 @@ void RulesController::mateAndStalemateProcessing(Board &board, MoveLog &moveLog)
 
             if (!isAttackedPriorityPiece(board, mainPieceSide, newMoveLog)) {
                 newMoveLog.goPreviousRecord(board, *this);
+                playerTurn = mainPieceSide;
                 return;
             }
 
+            //changePlayerTurn();
             newMoveLog.goPreviousRecord(board, *this);
         }
 
@@ -99,9 +103,16 @@ void RulesController::mateAndStalemateProcessing(Board &board, MoveLog &moveLog)
     } else {
         gameStatus = STALEMATE;
     }
+
+    playerTurn = mainPieceSide;
 }
 
-void RulesController::addPieceToChoose(std::shared_ptr<Piece> &piecePtr) {
+void RulesController::addReplacementPiece(std::shared_ptr<Piece> &piecePtr) {
+    gameStatus = CHANGE_PIECE;
+    replacementPiece = piecePtr;
+}
+
+void RulesController::addPieceToChoose(std::shared_ptr<Piece> piecePtr) {
     gameStatus = CHANGE_PIECE;
     piecesToChoose.push_back(piecePtr);
 }
@@ -112,11 +123,22 @@ void RulesController::showPiecesToChoose(std::list<int> &kindPieces) {
     }
 }
 
-std::shared_ptr<Piece> RulesController::getPieceToChoose(int index) {
-    return piecesToChoose.at(index);
+std::shared_ptr<Piece> RulesController::getPieceToChoose(PieceKind kind) {
+    for (auto it = piecesToChoose.begin(); it != piecesToChoose.end(); ++it) {
+        if ((*it)->getKind() == kind) {
+            return *it;
+        }
+    }
+    return nullptr;
+}
+
+std::shared_ptr<Piece> RulesController::getReplacementPiece() {
+    return replacementPiece;
 }
 
 void RulesController::clearPiecesToChoose() {
     gameStatus = IN_GAME;
+
     piecesToChoose.clear();
+    replacementPiece = nullptr;
 }
