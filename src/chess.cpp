@@ -3,6 +3,8 @@
 
 void Chess::getPossibleSteps(CellPos pos, std::list<CellPos> &steps) {
     board.getPiecePtr(pos)->getPossibleSteps(board, moveLog, steps);
+
+    rulesController.excludeChecksFromPossibleSteps(pos, steps, board, moveLog);
 }
 
 Color Chess::getPieceSide(CellPos pos) {
@@ -13,16 +15,18 @@ Color Chess::getPieceSide(CellPos pos) {
     return NO_COLOR;
 }
 
-bool Chess::classicStartPosition() {
+bool Chess::classicStartPosition(RulesController &rulesController) {
     if (board.size != 8) {
         return false;
     }
 
     board.clear();
+
     for (int i = 1; i <= 8; ++i) {
         board.setPiece(std::make_shared<Pawn>(CellPos(i, 2), WHITE, true));
         board.setPiece(std::make_shared<Pawn>(CellPos(i, 7), BLACK, true));
     }
+
     for (int i = 0; i < 2; ++i) {
         board.setPiece(std::make_shared<Rook>(CellPos(1 + i * 7, 1), WHITE));
         board.setPiece(std::make_shared<Rook>(CellPos(1 + i * 7, 8), BLACK));
@@ -31,10 +35,14 @@ bool Chess::classicStartPosition() {
         board.setPiece(std::make_shared<Bishop>(CellPos(3 + i * 3, 1), WHITE));
         board.setPiece(std::make_shared<Bishop>(CellPos(3 + i * 3, 8), BLACK));
     }
+
     board.setPiece(std::make_shared<Queen>(CellPos(4, 1), WHITE));
     board.setPiece(std::make_shared<Queen>(CellPos(4, 8), BLACK));
+
     board.setPiece(std::make_shared<King>(CellPos(5, 1), WHITE));
+    rulesController.setPriorityPiece(board.getPiecePtr(CellPos(5, 1)));
     board.setPiece(std::make_shared<King>(CellPos(5, 8), BLACK));
+    rulesController.setPriorityPiece(board.getPiecePtr(CellPos(5, 8)));
 
     return true;
 } 
@@ -45,9 +53,13 @@ bool Chess::move(CellPos pos1, CellPos pos2) {
     }
 
     if (!board.isCellEmpty(pos1) && pos1 != pos2 && board.getPiecePtr(pos1)->isPossibleStep(board, moveLog, pos2)) {
-        board.getPiecePtr(pos1)->move(board, moveLog, pos2);
+        board.getPiecePtr(pos1)->move(board, moveLog, rulesController, pos2);
         board.deletePiecesFromList();
-        
+
+        rulesController.changePlayerTurn();
+
+        rulesController.mateAndStalemateProcessing(board, moveLog);
+
         return true;
     }
 
@@ -67,11 +79,11 @@ void Chess::setRecordingStatus(LogStatus recordingStatus) {
 }
 
 bool Chess::nextMove() {
-    return moveLog.goNextRecord(board);
+    return moveLog.goNextRecord(board, rulesController);
 }
 
 bool Chess::previousMove() {
-    return moveLog.goPreviousRecord(board);
+    return moveLog.goPreviousRecord(board, rulesController);
 }
 
 std::vector<int> Chess::getBoard() {

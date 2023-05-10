@@ -1,20 +1,20 @@
 #include "chessSet.hpp"
 
 
-void Piece::move(Board &board, MoveLog &moveLog, CellPos newPos) {
+void Piece::move(Board &board, MoveLog &moveLog, RulesController &rules, CellPos newPos) {
     moveLog.createNewRecord({position, newPos}, pieceSide, kind);
 
     if (!board.isCellEmpty(newPos) && board.getPiecePtr(position) != board.getPiecePtr(newPos)) {
-        moveLog.addNewMoveRecord(board.getPiecePtr(newPos), REMOVAL);
+        moveLog.addNewMoveRecord(board.getPiecePtr(newPos), rules.isPriorityPiece(board.getPiecePtr(newPos)) ? REMOVAL_PRIORITY : REMOVAL);
         board.deletePiece(newPos);
     }
 
-    moveLog.addNewMoveRecord(board.getPiecePtr(position), REMOVAL);
+    moveLog.addNewMoveRecord(board.getPiecePtr(position), rules.isPriorityPiece(board.getPiecePtr(position)) ? REMOVAL_PRIORITY : REMOVAL);
     board.replacePiece(position, newPos);
 
     position = newPos;
     isFirstStep = false;
-    moveLog.addNewMoveRecord(board.getPiecePtr(position), ADDITION);
+    moveLog.addNewMoveRecord(board.getPiecePtr(position), rules.isPriorityPiece(board.getPiecePtr(position)) ? ADDING_PRIORITY : ADDITION);
 }
 
 void Piece::getPossibleSteps(Board &board, MoveLog &moveLog, std::list<CellPos> &steps) {
@@ -39,7 +39,7 @@ bool Piece::isPossibleStep(Board &board, MoveLog &moveLog, CellPos otherPos) {
     return false;
 }
 
-void King::move(Board &board, MoveLog &moveLog, CellPos newPos) {
+void King::move(Board &board, MoveLog &moveLog, RulesController &rules, CellPos newPos) {
     CellPos rookPos = CellPos();
 
     // castling checking
@@ -56,20 +56,20 @@ void King::move(Board &board, MoveLog &moveLog, CellPos newPos) {
 
         // rook moving
         CellPos newRookPos = CellPos(position.getLetter() + dir, position.getNumber());
-        moveLog.addNewMoveRecord(board.getPiecePtr(rookPos), REMOVAL);
+        moveLog.addNewMoveRecord(board.getPiecePtr(rookPos), rules.isPriorityPiece(board.getPiecePtr(rookPos)) ? REMOVAL_PRIORITY : REMOVAL);
         board.replacePiece(rookPos, newRookPos);
         board.getPiecePtr(newRookPos)->setIsFirstStep(false);
         board.getPiecePtr(newRookPos)->setPos(newRookPos);
-        moveLog.addNewMoveRecord(board.getPiecePtr(newRookPos), ADDITION);
+        moveLog.addNewMoveRecord(board.getPiecePtr(newRookPos), rules.isPriorityPiece(board.getPiecePtr(newRookPos)) ? ADDING_PRIORITY : ADDITION);
 
         // king moving
-        moveLog.addNewMoveRecord(board.getPiecePtr(position), REMOVAL);
+        moveLog.addNewMoveRecord(board.getPiecePtr(position), rules.isPriorityPiece(board.getPiecePtr(position)) ? REMOVAL_PRIORITY : REMOVAL);
         board.replacePiece(position, newPos);
         isFirstStep = false;
         position = newPos;  
-        moveLog.addNewMoveRecord(board.getPiecePtr(newPos), ADDITION);
+        moveLog.addNewMoveRecord(board.getPiecePtr(newPos), rules.isPriorityPiece(board.getPiecePtr(newPos)) ? ADDING_PRIORITY : ADDITION);
     } else {
-        Piece::move(board, moveLog, newPos);
+        Piece::move(board, moveLog, rules, newPos);
     }
 }
 
@@ -280,7 +280,7 @@ int Pawn::getDirEnPassent(MoveLog &moveLog, CellPos currentPos) {
     return 0;
 }
 
-void Pawn::move(Board &board, MoveLog &moveLog, CellPos newPos) {
+void Pawn::move(Board &board, MoveLog &moveLog, RulesController &rules, CellPos newPos) {
     int dir = (direction == UP) ? 1 : -1;
     int dirEnPassent = getDirEnPassent(moveLog, position);
     CellPos possiblePos = CellPos(position.getLetter() + dirEnPassent, position.getNumber() + dir);
@@ -290,18 +290,18 @@ void Pawn::move(Board &board, MoveLog &moveLog, CellPos newPos) {
         moveLog.createNewRecord({position, newPos}, pieceSide, kind);
 
         if (!board.isCellEmpty(enemyPos) && board.getPiecePtr(position) != board.getPiecePtr(enemyPos)) {
-            moveLog.addNewMoveRecord(board.getPiecePtr(enemyPos), REMOVAL);
+            moveLog.addNewMoveRecord(board.getPiecePtr(enemyPos), rules.isPriorityPiece(board.getPiecePtr(enemyPos)) ? REMOVAL_PRIORITY : REMOVAL);
             board.deletePiece(enemyPos);
         }
 
-        moveLog.addNewMoveRecord(board.getPiecePtr(position), REMOVAL);
+        moveLog.addNewMoveRecord(board.getPiecePtr(position), rules.isPriorityPiece(board.getPiecePtr(position)) ? REMOVAL_PRIORITY : REMOVAL);
         board.replacePiece(position, newPos);
 
         position = newPos;
         isFirstStep = false;
-        moveLog.addNewMoveRecord(board.getPiecePtr(position), ADDITION);
+        moveLog.addNewMoveRecord(board.getPiecePtr(position), rules.isPriorityPiece(board.getPiecePtr(position)) ? ADDING_PRIORITY : ADDITION);
     } else {
-        Piece::move(board, moveLog, newPos);
+        Piece::move(board, moveLog, rules, newPos);
     }
 }
 

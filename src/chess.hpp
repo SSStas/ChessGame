@@ -10,18 +10,15 @@
 #include "cellPos.hpp"
 
 
-class RulesController {
-    public:
-        RulesController() {}    
-};
-
 class Chess {
     Board board; 
     MoveLog moveLog;
+    RulesController rulesController;
 
     public:
         Chess(int size = 8, LogStatus recordingStatus = RECORDING_ON): board(size), moveLog(recordingStatus) {
-            classicStartPosition();
+            rulesController = RulesController();
+            classicStartPosition(rulesController);
         }
 
         int getSize() {
@@ -30,9 +27,12 @@ class Chess {
 
         void getPossibleSteps(CellPos pos, std::list<CellPos> &steps);
         Color getPieceSide(CellPos pos);
-        
 
-        bool classicStartPosition(); 
+        void changePlayerTurn() { rulesController.changePlayerTurn(); }
+        Color getPlayerTurn() { return rulesController.getPlayerTurn(); }
+        GameStatus getGameStatus() { return rulesController.getGameStatus(); }
+
+        bool classicStartPosition(RulesController &rulesController); 
 
         bool move(CellPos pos1, CellPos pos2);
 

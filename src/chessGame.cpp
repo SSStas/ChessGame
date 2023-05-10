@@ -2,9 +2,7 @@
 #include <cmath>
 
 
-ChessGame::ChessGame(): chess(), currentPos() { 
-    playerTurn = WHITE;
-}
+ChessGame::ChessGame(): chess(), currentPos() { }
 
 bool ChessGame::isPossibleStep(CellPos pos) {
     for (auto posIt = possibleSteps.begin(); posIt != possibleSteps.end(); ++posIt) {
@@ -30,7 +28,7 @@ bool ChessGame::makeStep(std::string str) {
     }
 
     clearChoosenPiece();
-    playerTurn = (playerTurn == WHITE) ? BLACK : ((playerTurn == BLACK) ? WHITE : NO_COLOR);
+    
     return true;
 }
 
@@ -46,7 +44,7 @@ bool ChessGame::choosePiece(std::string str) {
         return false;
     }
 
-    if (!isPossibleStep(pos) && chess.getPieceSide(pos) == playerTurn) {
+    if (!isPossibleStep(pos) && chess.getPieceSide(pos) == chess.getPlayerTurn()) {
         if (currentPos != pos) {
             clearChoosenPiece(); 
             chess.getPossibleSteps(pos, possibleSteps);
@@ -75,25 +73,44 @@ LogStatus ChessGame::changeRecordingStatus() {
 
 void ChessGame::nextMove() {
     clearChoosenPiece();
-    if (chess.nextMove())
-        playerTurn = (playerTurn == WHITE) ? BLACK : ((playerTurn == BLACK) ? WHITE : NO_COLOR);
+    chess.nextMove();
 }
 
 void ChessGame::previousMove() {
     clearChoosenPiece();
-    if (chess.previousMove())
-        playerTurn = (playerTurn == WHITE) ? BLACK : ((playerTurn == BLACK) ? WHITE : NO_COLOR);
+    chess.previousMove();
 }
 
 void ChessGame::show() {
     std::vector<int> fullBoard = chess.getBoard();
 
-    std::cout << "Board " << ((playerTurn == 1) ? "WHITE" : "BLACK") << std::endl;
+    std::cout << "Board " << ((chess.getPlayerTurn() == WHITE) ? "WHITE" : "BLACK") << std::endl;
 
     for (int i = 0; i < chess.getSize(); ++i) {
         for (int j = 0; j < chess.getSize(); ++j) {
             std::cout << std::setfill(' ') << std::setw(2) << fullBoard[j * chess.getSize() + i] << " ";
         }
         std::cout << std::endl;
+    }
+
+    std::cout << ".Status ";
+
+    switch (chess.getGameStatus())
+    {
+    case WHITE_WIN:
+        std::cout << "WHITE_WIN" << std::endl;
+        break;
+    case BLACK_WIN:
+        std::cout << "BLACK_WIN" << std::endl;
+        break;
+    case STALEMATE:
+        std::cout << "STALEMATE" << std::endl;
+        break;
+    case CHANGE_PIECE:
+        std::cout << "CHANGE_PIECE" << std::endl;
+        break;
+    default:
+        std::cout << "IN_GAME" << std::endl;
+        break;
     }
 }

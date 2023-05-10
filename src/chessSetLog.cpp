@@ -25,7 +25,6 @@ void MoveLog::createNewRecord(step mainPieceStep, Color mainPieceSide, PieceKind
         log.push_front(SavedMoving_t(mainPieceStep, mainPieceSide, mainPieceKind));
         lastState = log.begin();
     }
-    std::cout << log.size() << "\n"; 
 }
 
 void MoveLog::addNewMoveRecord(std::shared_ptr<Piece> &piecePtr, PieceMoveStatus status) {
@@ -36,12 +35,10 @@ void MoveLog::addNewMoveRecord(std::shared_ptr<Piece> &piecePtr, PieceMoveStatus
     lastState->piecesMove.push_front({piecePtr->copySharedPtr(), status});
 }
 
-bool MoveLog::goNextRecord(Board &board) {
+bool MoveLog::goNextRecord(Board &board, RulesController &rulesController) {
     if (lastState == log.begin() || logStatus == RECORDING_OFF) {
         return false;
     }
-
-    std::cout << log.size() << "\n"; 
 
     --lastState;
 
@@ -62,23 +59,23 @@ bool MoveLog::goNextRecord(Board &board) {
         } 
         
         if (it->second == ADDING_PRIORITY) {
-            // TODO RuleController checking
+            rulesController.setPriorityPiece(board.getPiecePtr(piecePos));
         }
 
         if (it->second == REMOVAL_PRIORITY) {
-            // TODO RuleController checking
+            rulesController.deletePriorityPiece(it->first->getSide());
         }
     }
+
+    rulesController.changePlayerTurn();
 
     return true;
 }
 
-bool MoveLog::goPreviousRecord(Board &board) {
+bool MoveLog::goPreviousRecord(Board &board, RulesController &rulesController) {
     if (lastState == log.end() || std::next(lastState) == log.end() || logStatus == RECORDING_OFF) {
         return false;
     }
-
-    std::cout << log.size() << "\n"; 
 
     for (auto it = lastState->piecesMove.begin(); it != lastState->piecesMove.end(); ++it) {
         CellPos piecePos = it->first->getPos();
@@ -94,14 +91,16 @@ bool MoveLog::goPreviousRecord(Board &board) {
         } 
         
         if (it->second == REMOVAL_PRIORITY) {
-            // TODO RuleController checking
+            rulesController.setPriorityPiece(board.getPiecePtr(piecePos));
         }
 
         if (it->second == ADDING_PRIORITY) {
-            // TODO RuleController checking
+            rulesController.deletePriorityPiece(it->first->getSide());
         }
     }
     ++lastState;
+
+    //rulesController.changePlayerTurn();
 
     return true;
 }

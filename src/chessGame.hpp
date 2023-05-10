@@ -14,7 +14,6 @@ class ChessGame {
     Chess chess;
 
     CellPos currentPos;
-    Color playerTurn;
     std::list<CellPos> possibleSteps; 
 
     bool isPossibleStep(CellPos pos);

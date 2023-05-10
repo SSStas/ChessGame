@@ -15,7 +15,10 @@ enum LogStatus { RECORDING_ON = 0, RECORDING_OFF };
 
 enum PieceMoveStatus { REMOVAL = 0, ADDITION, REMOVAL_PRIORITY, ADDING_PRIORITY };
 
+enum GameStatus { IN_GAME = 0, WHITE_WIN, BLACK_WIN, STALEMATE, CHANGE_PIECE };
+
 class Piece;
+class RulesController;
 
 using piecesList = std::list<std::shared_ptr<Piece>>;
 using pieceMoving = std::pair<std::shared_ptr<Piece>, PieceMoveStatus>;
@@ -81,6 +84,11 @@ class MoveLog {
             lastState = log.begin();
         }
 
+        MoveLog(LogStatus logStatus, step mainPieceStep, Color mainPieceSide, PieceKind mainPieceKind): logStatus(logStatus) {
+            log.assign(1, SavedMoving_t(mainPieceStep, mainPieceSide, mainPieceKind));
+            lastState = log.begin();
+        }
+
         bool isLogRecordOn() { return logStatus == RECORDING_ON; }
         void turnRecordingOn();
         void turnRecordingOff();
@@ -88,12 +96,48 @@ class MoveLog {
         void createNewRecord(step mainPieceStep, Color mainPieceSide, PieceKind mainPieceKind);
         void addNewMoveRecord(std::shared_ptr<Piece> &piecePtr, PieceMoveStatus status);
 
-        bool goNextRecord(Board &board);
-        bool goPreviousRecord(Board &board);
+        bool goNextRecord(Board &board, RulesController &rulesController);
+        bool goPreviousRecord(Board &board, RulesController &rulesController);
 
         step getLastMoveStep();
         Color getLastMoveColor();
         PieceKind getLastMoveKind();
+};
+
+// Controls the implementation of the rules of the game
+
+class RulesController {
+    GameStatus gameStatus;
+    Color playerTurn;
+
+    std::vector<std::shared_ptr<Piece>> piecesToChoose;
+
+    std::shared_ptr<Piece> mainWhite;
+    std::shared_ptr<Piece> mainBlack;
+
+    public:
+        RulesController(): gameStatus(IN_GAME), playerTurn(WHITE) {
+            mainWhite = nullptr;
+            mainBlack = nullptr;
+        }  
+
+        GameStatus getGameStatus();
+
+        void setPriorityPiece(std::shared_ptr<Piece> &piecePtr);
+        void deletePriorityPiece(Color pieceSide);
+        bool isPriorityPiece(std::shared_ptr<Piece> &piecePtr);
+
+        bool isAttackedPriorityPiece(Board &board, Color pieceSide, MoveLog &moveLog);
+        void excludeChecksFromPossibleSteps(CellPos pos, std::list<CellPos> &steps, Board &board, MoveLog &moveLog);
+        void mateAndStalemateProcessing(Board &board, MoveLog &moveLog);
+        
+        void addPieceToChoose(std::shared_ptr<Piece> &piecePtr);
+        void showPiecesToChoose(std::list<int> &piecesToChoose);
+        std::shared_ptr<Piece> getPieceToChoose(int index);
+        void clearPiecesToChoose();
+
+        void changePlayerTurn() { playerTurn = (playerTurn == WHITE) ? BLACK : ((playerTurn == BLACK) ? WHITE : NO_COLOR); }
+        Color getPlayerTurn() { return playerTurn; }
 };
 
 // Data and structure of movement of chess pieces
@@ -121,7 +165,7 @@ class Piece {
         void setIsFirstStep(bool val) { this->isFirstStep = val; }
         void setPos(CellPos position) { this->position = position; }
 
-        virtual void move(Board &board, MoveLog &moveLog, CellPos newPos);
+        virtual void move(Board &board, MoveLog &moveLog, RulesController &rules, CellPos newPos);
         virtual void getPossibleSteps(Board &board, MoveLog &moveLog, std::list<CellPos> &steps);
         virtual bool isPossibleStep(Board &board, MoveLog &moveLog, CellPos otherPos);
 
@@ -136,7 +180,7 @@ class King: public Piece {
             this->kind = KING;
         }
 
-        void move(Board &board, MoveLog &moveLog, CellPos newPos);
+        void move(Board &board, MoveLog &moveLog, RulesController &rules, CellPos newPos);
         void getPossibleSteps(Board &board, MoveLog &moveLog, std::list<CellPos> &steps);
         bool isPossibleStep(Board &board, MoveLog &moveLog, CellPos otherPos);
 
@@ -219,7 +263,7 @@ class Pawn: public Piece {
             this->direction = (this->pieceSide == WHITE) ? UP : DOWN;
         }
 
-        void move(Board &board, MoveLog &moveLog, CellPos newPos);
+        void move(Board &board, MoveLog &moveLog, RulesController &rules, CellPos newPos);
         void getPossibleSteps(Board &board, MoveLog &moveLog, std::list<CellPos> &steps);
         bool isPossibleStep(Board &board, MoveLog &moveLog, CellPos otherPos); 
         
